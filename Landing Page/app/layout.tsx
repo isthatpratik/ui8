@@ -37,6 +37,11 @@ export default function RootLayout({
                 />
                 <meta name="twitter:creator" content="@ui8" />
                 {/* Twitter Summary card images must be at least 120x120px */}
+                <script
+                    src={`https://maps.googleapis.com/maps/api/js?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY}&libraries=places`}
+                    async
+                    defer
+                />
             </head>
             <body>
                 <Providers>{children}</Providers>

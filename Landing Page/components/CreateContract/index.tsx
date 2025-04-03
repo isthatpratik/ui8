@@ -8,6 +8,8 @@ import { Document, Packer, Paragraph, TextRun, HeadingLevel } from 'docx';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import Toast from '../Toast';
+import LocationAutocomplete from '../LocationAutocomplete';
+import { contractTypeMappings } from '@/utils/contractTypes';
 
 const contractTypes = [
     'Employment Contract',
@@ -17,7 +19,29 @@ const contractTypes = [
     'Sales Contract',
     'Partnership Agreement',
     'Consulting Agreement',
-    'License Agreement'
+    'License Agreement',
+    'Franchise Agreement',
+    'Joint Venture Agreement',
+    'Distribution Agreement',
+    'Supply Agreement',
+    'Confidentiality Agreement',
+    'Settlement Agreement',
+    'Loan Agreement',
+    'Insurance Contract',
+    'Real Estate Purchase Agreement',
+    'Construction Contract',
+    'Software License Agreement',
+    'Trademark License Agreement',
+    'Patent License Agreement',
+    'Merger Agreement',
+    'Acquisition Agreement',
+    'Shareholder Agreement',
+    'Operating Agreement',
+    'Subscription Agreement',
+    'Sponsorship Agreement',
+    'Event Contract',
+    'Photography Contract',
+    'Freelance Agreement'
 ];
 
 const CreateContract = () => {
@@ -39,12 +63,35 @@ const CreateContract = () => {
     const [error, setError] = useState<string | null>(null);
     const [showToast, setShowToast] = useState(false);
     const [toastMessage, setToastMessage] = useState('');
+    const [editableKeyTerms, setEditableKeyTerms] = useState<string[]>([]);
+    const [showFirstPartyAddress, setShowFirstPartyAddress] = useState(false);
+    const [showSecondPartyAddress, setShowSecondPartyAddress] = useState(false);
 
     const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
         const { name, value } = e.target;
         setContractData((prev: ContractData) => ({
             ...prev,
             [name]: value
+        }));
+
+        // If contract type changes, update key terms
+        if (name === 'contractType') {
+            const defaultKeyTerms = contractTypeMappings[value]?.keyTerms || [];
+            setEditableKeyTerms(defaultKeyTerms);
+            setContractData(prev => ({
+                ...prev,
+                keyTerms: defaultKeyTerms.join('\n')
+            }));
+        }
+    };
+
+    const handleKeyTermChange = (index: number, value: string) => {
+        const updatedKeyTerms = [...editableKeyTerms];
+        updatedKeyTerms[index] = value;
+        setEditableKeyTerms(updatedKeyTerms);
+        setContractData(prev => ({
+            ...prev,
+            keyTerms: updatedKeyTerms.join('\n')
         }));
     };
 
@@ -255,64 +302,80 @@ const CreateContract = () => {
                         </select>
                     </div>
                     <div className={styles.field}>
-                        <label>First party name</label>
+                        <label>First Party Name</label>
                         <input
                             type="text"
                             name="firstPartyName"
                             value={contractData.firstPartyName}
                             onChange={handleChange}
-                            placeholder="Enter first party name"
+                            className={styles.input}
                         />
                     </div>
                     <div className={styles.field}>
-                        <label>First party address (Optional)</label>
-                        <textarea
-                            name="firstPartyAddress"
-                            value={contractData.firstPartyAddress}
-                            onChange={handleChange}
-                            placeholder="Enter first party address"
-                            className={styles.addressInput}
-                            rows={3}
-                        />
+                        <div className={styles.addressToggle}>
+                            <label>First Party Address</label>
+                            <button
+                                type="button"
+                                onClick={() => setShowFirstPartyAddress(!showFirstPartyAddress)}
+                                className={styles.toggleButton}
+                            >
+                                {showFirstPartyAddress ? 'Hide Address' : 'Add Address'}
+                            </button>
+                        </div>
+                        {showFirstPartyAddress && (
+                            <LocationAutocomplete
+                                value={contractData.firstPartyAddress || ''}
+                                onChange={(value) => setContractData(prev => ({ ...prev, firstPartyAddress: value }))}
+                                placeholder="Enter first party address"
+                            />
+                        )}
                     </div>
                     <div className={styles.field}>
-                        <label>Second party name</label>
+                        <label>Second Party Name</label>
                         <input
                             type="text"
                             name="secondPartyName"
                             value={contractData.secondPartyName}
                             onChange={handleChange}
-                            placeholder="Enter second party name"
+                            className={styles.input}
                         />
                     </div>
                     <div className={styles.field}>
-                        <label>Second party address (Optional)</label>
-                        <textarea
-                            name="secondPartyAddress"
-                            value={contractData.secondPartyAddress}
-                            onChange={handleChange}
-                            placeholder="Enter second party address"
-                            className={styles.addressInput}
-                            rows={3}
-                        />
+                        <div className={styles.addressToggle}>
+                            <label>Second Party Address</label>
+                            <button
+                                type="button"
+                                onClick={() => setShowSecondPartyAddress(!showSecondPartyAddress)}
+                                className={styles.toggleButton}
+                            >
+                                {showSecondPartyAddress ? 'Hide Address' : 'Add Address'}
+                            </button>
+                        </div>
+                        {showSecondPartyAddress && (
+                            <LocationAutocomplete
+                                value={contractData.secondPartyAddress || ''}
+                                onChange={(value) => setContractData(prev => ({ ...prev, secondPartyAddress: value }))}
+                                placeholder="Enter second party address"
+                            />
+                        )}
                     </div>
                     <div className={styles.field}>
                         <label>Jurisdiction</label>
-                        <input
-                            type="text"
-                            name="jurisdiction"
+                        <LocationAutocomplete
                             value={contractData.jurisdiction}
-                            onChange={handleChange}
-                            placeholder="Select contract type"
+                            onChange={(value) => setContractData(prev => ({ ...prev, jurisdiction: value }))}
+                            placeholder="Enter city, state, and country"
+                            isJurisdiction={true}
                         />
                     </div>
                     <div className={styles.field}>
-                        <label>Key Terms (Optional)</label>
+                        <label>Key Terms</label>
                         <textarea
                             name="keyTerms"
                             value={contractData.keyTerms}
                             onChange={handleChange}
-                            placeholder="Any key terms you'd like to specify"
+                            placeholder="Key terms will be automatically populated based on contract type"
+                            className={styles.keyTermsTextarea}
                         />
                     </div>
                     <div className={styles.field}>
